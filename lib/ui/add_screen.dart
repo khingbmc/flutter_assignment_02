@@ -1,7 +1,5 @@
-import 'package:flutter_assignment_02/Database/DBHelper.dart';
-import 'package:flutter_assignment_02/Models/todo.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_assignment_02/Models/todo.dart';
 
 class TodoAdd extends StatefulWidget{
   @override
@@ -12,68 +10,51 @@ class TodoAdd extends StatefulWidget{
 
 }
 
-
-
-class TodoAddState extends State<StatefulWidget> {
-  Todo todo = new Todo();
-
-  String title;
-  int done;
-
-  final scaffoldKey = new GlobalKey<ScaffoldState>();
-  final formKey = new GlobalKey<FormState>();
-
+class TodoAddState extends State<StatefulWidget>{
+  final _formkey = GlobalKey<FormState>();
+  TextEditingController subjectTodo = TextEditingController();
+  TodoProvide db = TodoProvide();
+  
   
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      key: scaffoldKey,
-      appBar: new AppBar(
-        title: Text("Todo"),
+    // TODO: implement build
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('New Subject'),
       ),
-      body: new Padding(padding: const EdgeInsets.all(16.0),
-      child: new Form(
-        key: formKey,
-        child: new Column(
-          children: <Widget>[
-            TextFormField(
-              keyboardType: TextInputType.text,
-              decoration: new InputDecoration(labelText: "Subject"),
-              validator: (val) => val.length == 0 ? "Please fill subject":null,
-              onSaved: (val) => this.title = val,
-            ),
-            new Container(
-              margin: const EdgeInsets.only(top: 10.0),
-              child: new RaisedButton(
-                onPressed: saveList,
-                child: Text("Save"),
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Form(
+          key: _formkey,
+          child: ListView(
+            children: <Widget>[
+              TextFormField(
+                controller: subjectTodo,
+                decoration: InputDecoration(labelText: 'Subbject'),
+                validator: (value){
+                  if(value.isEmpty) return "Please fill subject";
+                },
               ),
-            )
-          ],
+              RaisedButton(
+                child: Text('Save'),
+                onPressed: () async{
+                  _formkey.currentState.validate();
+                  if (subjectTodo.text.isNotEmpty){
+                    await db.open("todo.db");
+                    Todo todo = Todo();
+                    todo.title = subjectTodo.text;
+                    todo.done = false;
+                    await db.addTodo(todo);
+                    Navigator.pop(context, true);
+                  }
+                },
+              )
+            ],
+          ),
         ),
-      ),),
+      ),
     );
   }
 
-  void startTodoList() {
-  // add Todo list
-
-  }
-
-  void saveList(){
-    if(this.formKey.currentState.validate()){
-      formKey.currentState.save();
-    }else{
-      return null;
-    }
-
-    var todo = Todo();
-    todo.title = title;
-    todo.done = done;
-
-    var dbHelper = DBHelper();
-    dbHelper.addNewTodolist(todo);
-    Fluttertoast.showToast(msg: "Todo was saved", toastLength: Toast.LENGTH_SHORT, backgroundColor: Color(0xFFFFFF), textColor: Color(0x333333));
-  }
-  
 }
